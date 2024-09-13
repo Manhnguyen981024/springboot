@@ -4,6 +4,8 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,12 +29,19 @@ public class UserResource {
 	}
 	
 	@GetMapping("/users/{id}")
-	public User queryUser(@PathVariable int id){
+	public EntityModel<User> queryUser(@PathVariable int id){
 		User user = this.daoService.findOne(id);
 		if (user == null) 
 			throw new UserNotFoundException("find user with id: " + id + " not found");
 		
-		return this.daoService.findOne(id);
+		EntityModel<User> entityModel = EntityModel.of(user);
+		
+		WebMvcLinkBuilder linkBuilder = WebMvcLinkBuilder.linkTo(
+				WebMvcLinkBuilder.methodOn(UserResource.class).queryAllUsers());
+		
+		entityModel.add(linkBuilder.withRel("all-users"));
+		
+		return entityModel;
 	}
 	
 	@PostMapping("/users")
